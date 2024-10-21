@@ -10,14 +10,15 @@
 	<a href="/">
 		<img id="logo" src= {{ url_for('static', filename='images/logo.png') }} />
 	</a>
-	<form>
-		<input id="searchBox" type="text" name="searchQuery">
+	<form action="/search" method="GET">
+		<input id="searchBox" type="text" name="query" placeholder="Search for products..." required>
 		<input id="searchButton" type="submit" value="Search">
 	</form>
+	
 
 	{% if not loggedIn %}
 	<div id="signInButton">
-		<a class="link" href="/loginForm">Sign In</a>
+		<a class="link" href="/login">Sign In</a>
 	</div>
 	{% else %}
 	<div class="dropdown">

@@ -133,7 +133,7 @@ def editProfile():
 @app.route("/account/profile/changePassword", methods=["GET", "POST"])
 def changePassword():
     if 'email' not in session:
-        return redirect(url_for('loginForm'))
+        return redirect(url_for('login'))
     if request.method == "POST":
         oldPassword = request.form['oldpassword']
         oldPassword = hashlib.md5(oldPassword.encode()).hexdigest()
@@ -185,7 +185,7 @@ def updateProfile():
         con.close()
         return redirect(url_for('editProfile'))
 
-@app.route("/loginForm")
+@app.route("/login")
 def loginForm():
     if 'email' in session:
         return redirect(url_for('root'))
@@ -204,6 +204,25 @@ def login():
             error = 'Invalid UserId / Password'
             return render_template('login.html', error=error)
 
+@app.route("/search")
+def search():
+    loggedIn, firstName, noOfItems = getLoginDetails()
+    query = request.args.get('query')
+
+    with sqlite3.connect('database.db') as conn:
+        cur = conn.cursor()
+        # Use LIKE for a partial match search
+        cur.execute("SELECT productId, name, price, description, image, stock FROM products WHERE name LIKE ?", ('%' + query + '%',))
+        itemData = cur.fetchall()
+
+        cur.execute('SELECT categoryId, name FROM categories')
+        categoryData = cur.fetchall()
+    
+    itemData = parse(itemData)
+
+    return render_template('home.html', itemData=itemData, loggedIn=loggedIn, firstName=firstName, noOfItems=noOfItems, categoryData=categoryData)
+
+
 @app.route("/productDescription")
 def productDescription():
     loggedIn, firstName, noOfItems = getLoginDetails()
@@ -218,7 +237,7 @@ def productDescription():
 @app.route("/addToCart")
 def addToCart():
     if 'email' not in session:
-        return redirect(url_for('loginForm'))
+        return redirect(url_for('login'))
     else:
         productId = int(request.args.get('productId'))
         with sqlite3.connect('database.db') as conn:
@@ -238,7 +257,7 @@ def addToCart():
 @app.route("/cart")
 def cart():
     if 'email' not in session:
-        return redirect(url_for('loginForm'))
+        return redirect(url_for('login'))
     loggedIn, firstName, noOfItems = getLoginDetails()
     email = session['email']
     with sqlite3.connect('database.db') as conn:
@@ -255,7 +274,7 @@ def cart():
 @app.route("/removeFromCart")
 def removeFromCart():
     if 'email' not in session:
-        return redirect(url_for('loginForm'))
+        return redirect(url_for('login'))
     email = session['email']
     productId = int(request.args.get('productId'))
     with sqlite3.connect('database.db') as conn:
