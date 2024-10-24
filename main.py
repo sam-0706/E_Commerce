@@ -8,6 +8,7 @@ UPLOAD_FOLDER = 'static/uploads'
 ALLOWED_EXTENSIONS = set(['jpeg', 'jpg', 'png', 'gif'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+
 def getLoginDetails():
     with sqlite3.connect('database.db') as conn:
         cur = conn.cursor()
@@ -17,12 +18,13 @@ def getLoginDetails():
             noOfItems = 0
         else:
             loggedIn = True
-            cur.execute("SELECT userId, firstName FROM users WHERE email = ?", (session['email'], ))
+            cur.execute("SELECT userId, firstName FROM users WHERE email = ?", (session['email'],))
             userId, firstName = cur.fetchone()
-            cur.execute("SELECT count(productId) FROM kart WHERE userId = ?", (userId, ))
+            cur.execute("SELECT count(productId) FROM kart WHERE userId = ?", (userId,))
             noOfItems = cur.fetchone()[0]
     conn.close()
     return (loggedIn, firstName, noOfItems)
+
 
 @app.route("/")
 def root():
@@ -33,8 +35,10 @@ def root():
         itemData = cur.fetchall()
         cur.execute('SELECT categoryId, name FROM categories')
         categoryData = cur.fetchall()
-    itemData = parse(itemData)   
-    return render_template('home.html', itemData=itemData, loggedIn=loggedIn, firstName=firstName, noOfItems=noOfItems, categoryData=categoryData)
+    itemData = parse(itemData)
+    return render_template('home.html', itemData=itemData, loggedIn=loggedIn, firstName=firstName, noOfItems=noOfItems,
+                           categoryData=categoryData)
+
 
 @app.route("/add")
 def admin():
@@ -45,6 +49,7 @@ def admin():
     conn.close()
     return render_template('add.html', categories=categories)
 
+
 @app.route("/addItem", methods=["GET", "POST"])
 def addItem():
     if request.method == "POST":
@@ -54,7 +59,7 @@ def addItem():
         stock = int(request.form['stock'])
         categoryId = int(request.form['category'])
 
-        #Uploading image procedure
+        # Uploading image procedure
         image = request.files['image']
         if image and allowed_file(image.filename):
             filename = secure_filename(image.filename)
@@ -63,15 +68,18 @@ def addItem():
         with sqlite3.connect('database.db') as conn:
             try:
                 cur = conn.cursor()
-                cur.execute('''INSERT INTO products (name, price, description, image, stock, categoryId) VALUES (?, ?, ?, ?, ?, ?)''', (name, price, description, imagename, stock, categoryId))
+                cur.execute(
+                    '''INSERT INTO products (name, price, description, image, stock, categoryId) VALUES (?, ?, ?, ?, ?, ?)''',
+                    (name, price, description, imagename, stock, categoryId))
                 conn.commit()
-                msg="added successfully"
+                msg = "added successfully"
             except:
-                msg="error occured"
+                msg = "error occured"
                 conn.rollback()
         conn.close()
         print(msg)
         return redirect(url_for('root'))
+
 
 @app.route("/remove")
 def remove():
@@ -82,13 +90,14 @@ def remove():
     conn.close()
     return render_template('remove.html', data=data)
 
+
 @app.route("/removeItem")
 def removeItem():
     productId = request.args.get('productId')
     with sqlite3.connect('database.db') as conn:
         try:
             cur = conn.cursor()
-            cur.execute('DELETE FROM products WHERE productID = ?', (productId, ))
+            cur.execute('DELETE FROM products WHERE productID = ?', (productId,))
             conn.commit()
             msg = "Deleted successsfully"
         except:
@@ -98,18 +107,23 @@ def removeItem():
     print(msg)
     return redirect(url_for('root'))
 
+
 @app.route("/displayCategory")
 def displayCategory():
-        loggedIn, firstName, noOfItems = getLoginDetails()
-        categoryId = request.args.get("categoryId")
-        with sqlite3.connect('database.db') as conn:
-            cur = conn.cursor()
-            cur.execute("SELECT products.productId, products.name, products.price, products.image, categories.name FROM products, categories WHERE products.categoryId = categories.categoryId AND categories.categoryId = ?", (categoryId, ))
-            data = cur.fetchall()
-        conn.close()
-        categoryName = data[0][4]
-        data = parse(data)
-        return render_template('displayCategory.html', data=data, loggedIn=loggedIn, firstName=firstName, noOfItems=noOfItems, categoryName=categoryName)
+    loggedIn, firstName, noOfItems = getLoginDetails()
+    categoryId = request.args.get("categoryId")
+    with sqlite3.connect('database.db') as conn:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT products.productId, products.name, products.price, products.image, categories.name FROM products, categories WHERE products.categoryId = categories.categoryId AND categories.categoryId = ?",
+            (categoryId,))
+        data = cur.fetchall()
+    conn.close()
+    categoryName = data[0][4]
+    data = parse(data)
+    return render_template('displayCategory.html', data=data, loggedIn=loggedIn, firstName=firstName,
+                           noOfItems=noOfItems, categoryName=categoryName)
+
 
 @app.route("/account/profile")
 def profileHome():
@@ -118,6 +132,7 @@ def profileHome():
     loggedIn, firstName, noOfItems = getLoginDetails()
     return render_template("profileHome.html", loggedIn=loggedIn, firstName=firstName, noOfItems=noOfItems)
 
+
 @app.route("/account/profile/edit")
 def editProfile():
     if 'email' not in session:
@@ -125,10 +140,12 @@ def editProfile():
     loggedIn, firstName, noOfItems = getLoginDetails()
     with sqlite3.connect('database.db') as conn:
         cur = conn.cursor()
-        cur.execute("SELECT userId, email, firstName, lastName, address1, address2, zipcode, city, state, country, phone FROM users WHERE email = ?", (session['email'], ))
+        cur.execute("SELECT userId, email, firstName, lastName, (session['email'] )")
         profileData = cur.fetchone()
     conn.close()
-    return render_template("editProfile.html", profileData=profileData, loggedIn=loggedIn, firstName=firstName, noOfItems=noOfItems)
+    return render_template("editProfile.html", profileData=profileData, loggedIn=loggedIn, firstName=firstName,
+                           noOfItems=noOfItems)
+
 
 @app.route("/account/profile/changePassword", methods=["GET", "POST"])
 def changePassword():
@@ -141,13 +158,13 @@ def changePassword():
         newPassword = hashlib.md5(newPassword.encode()).hexdigest()
         with sqlite3.connect('database.db') as conn:
             cur = conn.cursor()
-            cur.execute("SELECT userId, password FROM users WHERE email = ?", (session['email'], ))
+            cur.execute("SELECT userId, password FROM users WHERE email = ?", (session['email']))
             userId, password = cur.fetchone()
             if (password == oldPassword):
                 try:
                     cur.execute("UPDATE users SET password = ? WHERE userId = ?", (newPassword, userId))
                     conn.commit()
-                    msg="Changed successfully"
+                    msg = "Changed successfully"
                 except:
                     conn.rollback()
                     msg = "Failed"
@@ -159,40 +176,28 @@ def changePassword():
     else:
         return render_template("changePassword.html")
 
+
 @app.route("/updateProfile", methods=["GET", "POST"])
 def updateProfile():
     if request.method == 'POST':
         email = request.form['email']
         firstName = request.form['firstName']
         lastName = request.form['lastName']
-        address1 = request.form['address1']
-        address2 = request.form['address2']
-        zipcode = request.form['zipcode']
-        city = request.form['city']
-        state = request.form['state']
-        country = request.form['country']
-        phone = request.form['phone']
         with sqlite3.connect('database.db') as con:
-                try:
-                    cur = con.cursor()
-                    cur.execute('UPDATE users SET firstName = ?, lastName = ?, address1 = ?, address2 = ?, zipcode = ?, city = ?, state = ?, country = ?, phone = ? WHERE email = ?', (firstName, lastName, address1, address2, zipcode, city, state, country, phone, email))
+            try:
+                cur = con.cursor()
+                cur.execute('UPDATE users SET firstName = ?, lastName = ?, (firstName, lastName, email)')
 
-                    con.commit()
-                    msg = "Saved Successfully"
-                except:
-                    con.rollback()
-                    msg = "Error occured"
+                con.commit()
+                msg = "Saved Successfully"
+            except:
+                con.rollback()
+                msg = "Error occured"
         con.close()
         return redirect(url_for('editProfile'))
 
-@app.route("/login")
-def loginForm():
-    if 'email' in session:
-        return redirect(url_for('root'))
-    else:
-        return render_template('login.html', error='')
 
-@app.route("/login", methods = ['POST', 'GET'])
+@app.route("/api/login", methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
         email = request.form['email']
@@ -203,6 +208,8 @@ def login():
         else:
             error = 'Invalid UserId / Password'
             return render_template('login.html', error=error)
+    return render_template('login.html', error='')
+
 
 @app.route("/search")
 def search():
@@ -212,15 +219,17 @@ def search():
     with sqlite3.connect('database.db') as conn:
         cur = conn.cursor()
         # Use LIKE for a partial match search
-        cur.execute("SELECT productId, name, price, description, image, stock FROM products WHERE name LIKE ?", ('%' + query + '%',))
+        cur.execute("SELECT productId, name, price, description, image, stock FROM products WHERE name LIKE ?",
+                    ('%' + query + '%',))
         itemData = cur.fetchall()
 
         cur.execute('SELECT categoryId, name FROM categories')
         categoryData = cur.fetchall()
-    
+
     itemData = parse(itemData)
 
-    return render_template('home.html', itemData=itemData, loggedIn=loggedIn, firstName=firstName, noOfItems=noOfItems, categoryData=categoryData)
+    return render_template('home.html', itemData=itemData, loggedIn=loggedIn, firstName=firstName, noOfItems=noOfItems,
+                           categoryData=categoryData)
 
 
 @app.route("/productDescription")
@@ -229,10 +238,13 @@ def productDescription():
     productId = request.args.get('productId')
     with sqlite3.connect('database.db') as conn:
         cur = conn.cursor()
-        cur.execute('SELECT productId, name, price, description, image, stock FROM products WHERE productId = ?', (productId, ))
+        cur.execute('SELECT productId, name, price, description, image, stock FROM products WHERE productId = ?',
+                    (productId,))
         productData = cur.fetchone()
     conn.close()
-    return render_template("productDescription.html", data=productData, loggedIn = loggedIn, firstName = firstName, noOfItems = noOfItems)
+    return render_template("productDescription.html", data=productData, loggedIn=loggedIn, firstName=firstName,
+                           noOfItems=noOfItems)
+
 
 @app.route("/addToCart")
 def addToCart():
@@ -242,7 +254,7 @@ def addToCart():
         productId = int(request.args.get('productId'))
         with sqlite3.connect('database.db') as conn:
             cur = conn.cursor()
-            cur.execute("SELECT userId FROM users WHERE email = ?", (session['email'], ))
+            cur.execute("SELECT userId FROM users WHERE email = ?", (session['email'],))
             userId = cur.fetchone()[0]
             try:
                 cur.execute("INSERT INTO kart (userId, productId) VALUES (?, ?)", (userId, productId))
@@ -254,7 +266,8 @@ def addToCart():
         conn.close()
         return redirect(url_for('root'))
 
-@app.route("/cart")
+
+@app.route("/api/cart")
 def cart():
     if 'email' not in session:
         return redirect(url_for('login'))
@@ -262,14 +275,18 @@ def cart():
     email = session['email']
     with sqlite3.connect('database.db') as conn:
         cur = conn.cursor()
-        cur.execute("SELECT userId FROM users WHERE email = ?", (email, ))
+        cur.execute("SELECT userId FROM users WHERE email = ?", (email,))
         userId = cur.fetchone()[0]
-        cur.execute("SELECT products.productId, products.name, products.price, products.image FROM products, kart WHERE products.productId = kart.productId AND kart.userId = ?", (userId, ))
+        cur.execute(
+            "SELECT products.productId, products.name, products.price, products.image FROM products, kart WHERE products.productId = kart.productId AND kart.userId = ?",
+            (userId,))
         products = cur.fetchall()
     totalPrice = 0
     for row in products:
         totalPrice += row[2]
-    return render_template("cart.html", products = products, totalPrice=totalPrice, loggedIn=loggedIn, firstName=firstName, noOfItems=noOfItems)
+    return render_template("cart.html", products=products, totalPrice=totalPrice, loggedIn=loggedIn,
+                           firstName=firstName, noOfItems=noOfItems)
+
 
 @app.route("/removeFromCart")
 def removeFromCart():
@@ -279,7 +296,7 @@ def removeFromCart():
     productId = int(request.args.get('productId'))
     with sqlite3.connect('database.db') as conn:
         cur = conn.cursor()
-        cur.execute("SELECT userId FROM users WHERE email = ?", (email, ))
+        cur.execute("SELECT userId FROM users WHERE email = ?", (email,))
         userId = cur.fetchone()[0]
         try:
             cur.execute("DELETE FROM kart WHERE userId = ? AND productId = ?", (userId, productId))
@@ -291,10 +308,12 @@ def removeFromCart():
     conn.close()
     return redirect(url_for('root'))
 
-@app.route("/logout")
+
+@app.route("/api/logout")
 def logout():
     session.pop('email', None)
     return redirect(url_for('root'))
+
 
 def is_valid(email, password):
     con = sqlite3.connect('database.db')
@@ -306,26 +325,21 @@ def is_valid(email, password):
             return True
     return False
 
-@app.route("/register", methods = ['GET', 'POST'])
+
+@app.route("/api/register", methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        #Parse form data    
+        # Parse form data
         password = request.form['password']
         email = request.form['email']
         firstName = request.form['firstName']
         lastName = request.form['lastName']
-        address1 = request.form['address1']
-        address2 = request.form['address2']
-        zipcode = request.form['zipcode']
-        city = request.form['city']
-        state = request.form['state']
-        country = request.form['country']
-        phone = request.form['phone']
 
         with sqlite3.connect('database.db') as con:
             try:
                 cur = con.cursor()
-                cur.execute('INSERT INTO users (password, email, firstName, lastName, address1, address2, zipcode, city, state, country, phone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', (hashlib.md5(password.encode()).hexdigest(), email, firstName, lastName, address1, address2, zipcode, city, state, country, phone))
+                cur.execute('INSERT INTO users (password, email, firstName, lastName) VALUES (?, ?, ?, ?)',
+                            (hashlib.md5(password.encode()).hexdigest(), email, firstName, lastName))
 
                 con.commit()
 
@@ -335,14 +349,40 @@ def register():
                 msg = "Error occured"
         con.close()
         return render_template("login.html", error=msg)
-
-@app.route("/registerationForm")
-def registrationForm():
     return render_template("register.html")
+
+
+@app.route("/api/products", methods=['GET'])
+def get_products():
+    try:
+        with sqlite3.connect('database.db') as conn:
+            cur = conn.cursor()
+            cur.execute('SELECT productId, name, price, description, image, stock FROM products')
+            products = cur.fetchall()
+
+        # Converting the fetched data to JSON format for other potential uses
+        product_list = []
+        for product in products:
+            product_info = {
+                "productId": product[0],
+                "name": product[1],
+                "price": product[2],
+                "description": product[3],
+                "image": product[4],
+                "stock": product[5]
+            }
+            product_list.append(product_info)
+
+        # Render the products.html with the fetched product data
+        return render_template("products.html", products=product_list)
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
 
 def allowed_file(filename):
     return '.' in filename and \
-            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+        filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+
 
 def parse(data):
     ans = []
@@ -356,6 +396,7 @@ def parse(data):
             i += 1
         ans.append(curr)
     return ans
+
 
 if __name__ == '__main__':
     app.run(debug=True)

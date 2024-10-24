@@ -1,0 +1,41 @@
+/* Products Page Styles */
+#itemImage {
+    height: 200px; /* Maintain consistent height */
+    width: 150px; /* Maintain consistent width */
+    object-fit: contain; /* Ensure images fit properly */
+}
+
+.display {
+    margin: 20px; /* Margins for the display area */
+}
+
+#productList {
+    display: flex; /* Use flexbox for layout */
+    flex-wrap: wrap; /* Allow wrapping of items */
+    gap: 20px; /* Space between items */
+    justify-content: center; /* Center items */
+}
+
+.product {
+    border: 1px solid #ccc; /* Border around each product */
+    padding: 10px; /* Padding within the product */
+    text-align: center; /* Center text */
+    background-color: #f9f9f9; /* Background color for products */
+    width: 200px; /* Fixed width for consistency */
+}
+
+.product img {
+    width: 150px; /* Consistent image width */
+    height: 150px; /* Consistent image height */
+    object-fit: contain; /* Ensure proper scaling of images */
+}
+
+.product h3 {
+    font-size: 18px; /* Font size for product names */
+    margin: 10px 0; /* Margin around product names */
+}
+
+#productPrice {
+    font-weight: bold; /* Bold price text */
+    margin: 5px 0; /* Margin around price */
+}

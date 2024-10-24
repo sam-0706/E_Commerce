@@ -1,0 +1,32 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Products</title>
+    <link rel="stylesheet" href={{ url_for('static', filename='css/products.css') }} />
+    <link rel="stylesheet" href={{ url_for('static', filename='css/topStyle.css') }} />
+</head>
+<body>
+<div id="title">
+    <a href="/">
+        <img id="logo" src={{ url_for('static', filename='images/logo.png') }} />
+    </a>
+    <h1>Products</h1>
+    <a href="/">Back to Home</a>
+</div>
+
+<div class="display">
+    <h2>All Products</h2>
+    <div id="productList"> <!-- New container for product items -->
+        {% for product in products %}
+        <div class="product"> <!-- Changed table to div for better layout -->
+            <a href="/productDescription?productId={{ product.productId }}">
+                <img src={{ url_for('static', filename='uploads/' + product.image) }} id="itemImage" />
+            </a>
+            <h3>{{ product.name }}</h3>
+            <p id="productPrice">${{ product.price }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>

@@ -1,33 +1,99 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<title>Registration</title>
-<script type="text/javascript" src="{{ url_for('static', filename = 'js/validateForm.js') }}">
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="email"]:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+
+        a {
+            display: block;
+            margin-top: 15px;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .error {
+            color: red;
+            margin-bottom: 15px;
+        }
+    </style>
 </head>
 <body>
-<form action="/register" method="POST" onsubmit="return validate()">
-    <p>Email: <input type="email" name="email"></p>
-
-    <P>Password: <input type="password" name="password" id="password" required></p>
-
-    <p>Confirm Password: <input type="password" name="cpassword" id="cpassword"></p>
-
-    <p>First Name: <input type="text" name="firstName"></p>
-    <p>Last Name: <input type="text" name="lastName"></p>
-    <p>Address Line 1: <input type="text" name="address1"></p>
-    <p>Address Line 2: <input type="text" name="address2"></p>
-    <p>Zipcode: <input type="text" name="zipcode"></p>
-    <p>City: <input type="text" name="city"></p>
-    <p>State: <input type="text" name="state"></p>
-    <p>Country: <input type="text" name="country"></p>
-    <p>Phone Number: <input type="text" name="phone"></p>
-
-    <p><input type="submit" value="Register"></p>
-
-    <a href="/login">Login here</a>
-</form>
+    <div class="container">
+        <h2>Register</h2>
+        <form action="/api/register" method="POST" onsubmit="return validate()">
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" id="password" placeholder="Password" required>
+            <input type="password" name="cpassword" id="cpassword" placeholder="Confirm Password" required>
+            <input type="text" name="firstName" placeholder="First Name" required>
+            <input type="text" name="lastName" placeholder="Last Name" required>
+            <input type="submit" value="Register">
+        </form>
+        <a href="/api/login">Login here</a>
+    </div>
 </body>
 </html>
-
-
-
