@@ -1,2 +1,6 @@
 Flask
 Werkzeug
+Flask-SQLAlchemy  # If you're using SQLAlchemy for database handling
+Werkzeug
+gunicorn
+
