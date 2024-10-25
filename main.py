@@ -334,36 +334,38 @@ def is_valid(email, password):
     return False
 
 
-@app.route("/api/register", methods=['POST'])
+@app.route("/api/register", methods=['GET', 'POST'])
 def register():
-    if request.method == "POST":
-        password = request.form.get("password")
-        email = request.form.get("email")
-        firstName = request.form.get("firstName")
-        lastName = request.form.get("lastName")
+    if request.method == 'GET':
+        # Render register.html for GET requests (e.g., for browser access)
+        return render_template("register.html")
 
-        # Validate input fields
-        if not all([password, email, firstName, lastName]):
-            return jsonify({"error": "All fields (password, email, firstName, lastName) are required."}), 400
+    # For POST requests (from Postman or browser form submissions)
+    password = request.form.get('password')
+    email = request.form.get('email')
+    firstName = request.form.get('firstName')
+    lastName = request.form.get('lastName')
 
-        with sqlite3.connect('database.db') as con:
-            cur = con.cursor()
-            cur.execute("SELECT * FROM users WHERE email = ?", (email,))
-            if cur.fetchone():
-                return jsonify({"error": "Email is already registered."}), 409
+    if not all([password, email, firstName, lastName]):
+        return jsonify({"error": "All fields (password, email, firstName, lastName) are required."}), 400
 
-            try:
-                hashed_password = hashlib.md5(password.encode()).hexdigest()
-                cur.execute('INSERT INTO users (password, email, firstName, lastName) VALUES (?, ?, ?, ?)',
-                            (hashed_password, email, firstName, lastName))
-                con.commit()
-                return jsonify({"message": "Registered Successfully"}), 201
-            except Exception as e:
-                con.rollback()
-                return jsonify({"error": "Error occurred during registration", "details": str(e)}), 500
+    with sqlite3.connect('database.db') as con:
+        cur = con.cursor()
 
-    # Render register.html for GET requests (e.g., for browser access)
-    return render_template("register.html")
+        cur.execute("SELECT * FROM users WHERE email = ?", (email,))
+        if cur.fetchone():
+            return jsonify({"error": "Email is already registered."}), 409
+
+        try:
+            hashed_password = hashlib.md5(password.encode()).hexdigest()
+            cur.execute('INSERT INTO users (password, email, firstName, lastName) VALUES (?, ?, ?, ?)',
+                        (hashed_password, email, firstName, lastName))
+            con.commit()
+            return jsonify({"message": "Registered Successfully"}), 201
+        except Exception as e:
+            con.rollback()
+            return jsonify({"error": "Error occurred during registration", "details": str(e)}), 500
+
 
 @app.route("/api/products", methods=['GET'])
 def get_products():
