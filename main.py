@@ -183,7 +183,7 @@ def updateProfile():
         email = request.form['email']
         firstName = request.form['firstName']
         lastName = request.form['lastName']
-        with sqlite3.connect('database.db') as con:
+        with sqlite3.connect('   database.db') as con:
             try:
                 cur = con.cursor()
                 cur.execute('UPDATE users SET firstName = ?, lastName = ?, (firstName, lastName, email)')
@@ -199,16 +199,24 @@ def updateProfile():
 
 @app.route("/api/login", methods=['POST', 'GET'])
 def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        if is_valid(email, password):
-            session['email'] = email
-            return redirect(url_for('root'))
-        else:
-            error = 'Invalid UserId / Password'
-            return render_template('login.html', error=error)
-    return render_template('login.html', error='')
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+        hashed_password = hashlib.md5(password.encode()).hexdigest()
+
+        with sqlite3.connect('database.db') as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM users WHERE email = ? AND password = ?", (email, hashed_password))
+            user = cur.fetchone()
+            if user:
+                session['email'] = email
+                msg = "Logged in successfully."
+                return jsonify({"message": msg}), 200
+            else:
+                msg = "Invalid email or password."
+                return jsonify({"message": msg}), 401
+    return render_template("login.html")
+
 
 
 @app.route("/search")
