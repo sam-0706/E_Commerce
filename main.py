@@ -334,30 +334,36 @@ def is_valid(email, password):
     return False
 
 
-@app.route("/api/register", methods=['GET', 'POST'])
+@app.route("/api/register", methods=['POST'])
 def register():
-    if request.method == 'POST':
-        # Parse form data
-        password = request.form['password']
-        email = request.form['email']
-        firstName = request.form['firstName']
-        lastName = request.form['lastName']
+    # Ensure all required fields are present
+    password = request.form.get('password')
+    email = request.form.get('email')
+    firstName = request.form.get('firstName')
+    lastName = request.form.get('lastName')
 
-        with sqlite3.connect('database.db') as con:
-            try:
-                cur = con.cursor()
-                cur.execute('INSERT INTO users (password, email, firstName, lastName) VALUES (?, ?, ?, ?)',
-                            (hashlib.md5(password.encode()).hexdigest(), email, firstName, lastName))
+    if not all([password, email, firstName, lastName]):
+        return jsonify({"error": "All fields (password, email, firstName, lastName) are required."}), 400
 
-                con.commit()
+    with sqlite3.connect('database.db') as con:
+        cur = con.cursor()
 
-                msg = "Registered Successfully"
-            except:
-                con.rollback()
-                msg = "Error occured"
-        con.close()
-        return render_template("login.html", error=msg)
-    return render_template("register.html")
+        # Check if the email is already registered
+        cur.execute("SELECT * FROM users WHERE email = ?", (email,))
+        if cur.fetchone():
+            return jsonify({"error": "Email is already registered."}), 409
+
+        try:
+            # Insert new user
+            hashed_password = hashlib.md5(password.encode()).hexdigest()
+            cur.execute('INSERT INTO users (password, email, firstName, lastName) VALUES (?, ?, ?, ?)',
+                        (hashed_password, email, firstName, lastName))
+            con.commit()
+
+            return jsonify({"message": "Registered Successfully"}), 201
+        except Exception as e:
+            con.rollback()
+            return jsonify({"error": "Error occurred during registration", "details": str(e)}), 500
 
 
 @app.route("/api/products", methods=['GET'])
