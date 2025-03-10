@@ -210,13 +210,12 @@ def login():
             user = cur.fetchone()
             if user:
                 session['email'] = email
-                msg = "Logged in successfully."
-                return jsonify({"message": msg}), 200
+                # Redirect to home page after successful login
+                return redirect(url_for('root'))
             else:
                 msg = "Invalid email or password."
                 return jsonify({"message": msg}), 401
     return render_template("login.html")
-
 
 
 @app.route("/search")
@@ -361,7 +360,8 @@ def register():
             cur.execute('INSERT INTO users (password, email, firstName, lastName) VALUES (?, ?, ?, ?)',
                         (hashed_password, email, firstName, lastName))
             con.commit()
-            return jsonify({"message": "Registered Successfully"}), 201
+            # Redirect to login page after successful registration
+            return redirect(url_for('login'))
         except Exception as e:
             con.rollback()
             return jsonify({"error": "Error occurred during registration", "details": str(e)}), 500
